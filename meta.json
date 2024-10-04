@@ -3,7 +3,7 @@
   "module_id": "viam-soleng:otis-elevator",
   "visibility": "private",
   "url": "https://github.com/viam-soleng/otis-elevator-python",
-  "description": "Viam python module for operating and monitoring otis elevators",
+  "description": "Viam python module for operating and monitoring Otis elevators",
   "models": [
     {
       "api": "rdk:component:generic",
