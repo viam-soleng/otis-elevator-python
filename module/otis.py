@@ -132,6 +132,9 @@ class OtisElevator(Generic, Sensor):
                          **kwargs) -> Mapping[str, ValueTypes]:
 
         for k,v in command.items():
+            if self.log_level:
+                self.LOGGER.info("REQUEST: {} | {}".format(k,v))
+                
             await self.conn.emit(k, v)
         
         return {"Success": True}
@@ -354,7 +357,7 @@ class OtisElevator(Generic, Sensor):
             #   "groupId": 1,
             #   "machineId": 2
             # }
-            
+
             if self.log_level:
                 self.LOGGER.info("destinationRequest: {}".format(data))
 
