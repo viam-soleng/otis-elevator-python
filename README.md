@@ -39,3 +39,8 @@ The following attributes are available:
 | `group_id` | string | **Required** | The group id that corresponds to the desired group of elevators.  |
 | `installation_id` | string | **Required** | The installation id that corresponds to the desired installation location.  |
 | `log_level` | bool | Optional | A bool that, if true, will log all responses and requests made to the Otis API (via SocketIO) |
+
+
+# Test Example
+
+An example of using this module to test out the codebase can be found int the `module` folder.
