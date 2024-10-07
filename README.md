@@ -43,4 +43,4 @@ The following attributes are available:
 
 # Test Example
 
-An example of using this module to test out the codebase can be found int the `module` folder.
+An example of using this module to test out the codebase can be found in the `tests` folder.
