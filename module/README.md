@@ -1,6 +1,7 @@
 # Interfacing with the Otis Elevator
 
-This is a Socket.IO service that provides real-time two-way communication. Below are the details on both publishing and subscribing to /api/oid/v1.
+This is a Socket.IO service that provides real-time two-way communication. Below are the details on both publishing and subscribing to /api/oid/v1. More 
+information can be found [here](https://developers.otis.com/socketio#)
 
 ## Send Requests
 

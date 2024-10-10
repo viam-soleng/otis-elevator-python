@@ -38,7 +38,9 @@ The following attributes are available:
 | `client_secret` | string | **Required** | The client API secret provided by Otis to get an access token.  |
 | `group_id` | string | **Required** | The group id that corresponds to the desired group of elevators.  |
 | `installation_id` | string | **Required** | The installation id that corresponds to the desired installation location.  |
-| `log_level` | bool | Optional | A bool that, if true, will log all responses and requests made to the Otis API (via SocketIO) |
+| `log_level` | bool | Optional | A bool that, if true, will log all responses and requests made to the Otis API (via SocketIO). Default is false. |
+| `passive` | bool | Optional | A bool that, if false, will enable commands to be sent to the elevator. Default is false. |
+| `exception_timeout` | bool | Optional | The time that a command will be held for while waiting for a possible exception to a given command. Default is 0.5 second.  |
 
 
 # Test Example

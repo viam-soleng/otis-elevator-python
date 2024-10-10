@@ -4,6 +4,7 @@ import sys
 import time
 import requests
 from typing import Any, List, ClassVar, Mapping, Optional
+from datetime import datetime
 
 import socketio
 from viam.components.generic import Generic
@@ -20,11 +21,13 @@ from google.protobuf.json_format import ParseDict
 
 
 class OtisElevator(Generic, Sensor):
-    GENERIC_MODEL: ClassVar[Model] = Model(ModelFamily("viam-soleng", "generic"), "otis-elevator")
-    SENSOR_MODEL: ClassVar[Model] = Model(ModelFamily("viam-soleng", "sensor"), "otis-elevator")
+    GENERIC_MODEL: ClassVar[Model] = Model(ModelFamily("marriott", "generic"), "otis-elevator")
+    SENSOR_MODEL: ClassVar[Model] = Model(ModelFamily("marriott", "sensor"), "otis-elevator")
     LOGGER = getLogger(__name__)
 
     log_level = False
+    passive_sensor = False
+    exception_check_timeout = 0.5
 
     # Config inputs
     client_id = ""
@@ -47,6 +50,7 @@ class OtisElevator(Generic, Sensor):
     group_state = {}
     numElevators = 0
     car_states = {}
+    current_exception = ""
 
 
     @classmethod
@@ -84,12 +88,42 @@ class OtisElevator(Generic, Sensor):
     def reconfigure(self, config: ComponentConfig,
                     dependencies: Mapping[ResourceName, ResourceBase]):
         
+        def get_attribute_from_config(attribute_name: str, default, of_type=None):
+            if attribute_name not in config.attributes.fields:
+                return default
+
+            if default is None:
+                if of_type is None:
+                    raise Exception(
+                        "If default value is None, of_type argument can't be empty"
+                    )
+                type_default = of_type
+            else:
+                type_default = type(default)
+
+            if type_default == bool:
+                return config.attributes.fields[attribute_name].bool_value
+            elif type_default == int:
+                return int(config.attributes.fields[attribute_name].number_value)
+            elif type_default == float:
+                return config.attributes.fields[attribute_name].number_value
+            elif type_default == str:
+                return config.attributes.fields[attribute_name].string_value
+            elif type_default == list:
+                return list(config.attributes.fields[attribute_name].list_value)
+            elif type_default == dict:
+                return dict(config.attributes.fields[attribute_name].struct_value)
+
+
         # Log level
-        self.log_level = config.attributes.fields["log_level"].bool_value
+        self.log_level = get_attribute_from_config("log_level", False, bool)
+        self.passive_sensor = get_attribute_from_config("passive", False, bool)
+        self.exception_check_timeout = get_attribute_from_config("exception_timeout", 0.5, float)
 
         # Get new access token if needed
         client_id_input = config.attributes.fields["client_id"].string_value
-        client_secret_input = config.attributes.fields["client_secret"].string_value
+        client_id_input =  get_attribute_from_config("client_id", None, str)
+        client_secret_input =  get_attribute_from_config("client_secret", None, str)
 
         if self.client_id != client_id_input or self.client_secret != client_secret_input:
             self.client_id = client_id_input
@@ -99,8 +133,8 @@ class OtisElevator(Generic, Sensor):
             self.access_key = resp.json()["access_token"]   
 
         # Establish socketio connection if needed
-        installation_id_input = config.attributes.fields["installation_id"].string_value
-        group_id_input = config.attributes.fields["group_id"].string_value
+        installation_id_input =  get_attribute_from_config("installation_id", None, str)
+        group_id_input =  get_attribute_from_config("group_id", None, str)
         if self.installation_id != installation_id_input or self.group_id != group_id_input:
             self.installation_id = installation_id_input
             self.group_id = group_id_input
@@ -131,13 +165,21 @@ class OtisElevator(Generic, Sensor):
                          timeout: Optional[float] = None,
                          **kwargs) -> Mapping[str, ValueTypes]:
 
-        for k,v in command.items():
-            if self.log_level:
-                self.LOGGER.info("REQUEST: {} | {}".format(k,v))
-                
-            await self.conn.emit(k, v)
+        if not self.passive_sensor:
+            for k,v in command.items():
+                if self.log_level:
+                    self.LOGGER.info("REQUEST: {} | {}".format(k,v))
+
+                self.current_exception = ""
+                await self.conn.emit(k, v)
+
+                err = await self.check_for_exception()
+                if err != "":
+                    return {"Response": "Error {}".format(err)}
+                else:
+                    return {"Response": "Success"}
         
-        return {"Success": True}
+        return {"Response": "Warning: This part is not confirmed to accept commands, set 'passive' to false enable behavior."}
     
     @classmethod
     # Implements the get_geometries, currently returns nothing
@@ -376,7 +418,7 @@ class OtisElevator(Generic, Sensor):
             if self.log_level:
                 self.LOGGER.info("exception: {}".format(data))
 
-            # -------------------- TBD --------------------
+            self.current_exception = data["message"]
 
         # Start socketio client connection
         async def connect_async():
@@ -388,6 +430,14 @@ class OtisElevator(Generic, Sensor):
 
         self.conn = conn
 
+    @classmethod
+    async def check_for_exception(self) -> str:
+        now = datetime.now()
+        while (datetime.now() - now).microseconds < int(self.exception_check_timeout*1000) and self.current_exception == "":
+            await asyncio.sleep(0.1)
+
+        return self.current_exception
+    
     @classmethod
     # Initializes resources (currently car states) after the SocketIO connection has been made
     async def initialize_otis_resources(self):
@@ -407,6 +457,8 @@ async def main():
 
     with open("otis_login.json", 'r') as file:
         config_data = json.load(file)
+
+    config_data["log_level"] = True
 
     cfg = ComponentConfig(attributes=config_data)
 

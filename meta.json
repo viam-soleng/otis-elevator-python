@@ -1,17 +1,17 @@
 {
   "$schema": "https://dl.viam.dev/module.schema.json",
-  "module_id": "viam-soleng:otis-elevator",
+  "module_id": "63dc6cce-cee8-427f-844b-7a7c55390241:otis-elevator",
   "visibility": "private",
   "url": "https://github.com/viam-soleng/otis-elevator-python",
   "description": "Viam python module for operating and monitoring Otis elevators",
   "models": [
     {
       "api": "rdk:component:generic",
-      "model": "viam-soleng:generic:otis-elevator"
+      "model": "marriott:generic:otis-elevator"
     },
     {
       "api": "rdk:component:sensor",
-      "model": "viam-soleng:sensor:otis-elevator"
+      "model": "marriott:sensor:otis-elevator"
     }
   ],
   "entrypoint": "./exec.sh"
