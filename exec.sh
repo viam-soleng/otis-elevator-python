@@ -9,4 +9,4 @@ source .env
 
 # Be sure to use `exec` so that termination signals reach the python process,
 # or handle forwarding termination signals manually
-exec python -m module.main $@
+exec $PYTHON -m module.main $@
