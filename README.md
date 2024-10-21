@@ -42,7 +42,19 @@ The following attributes are available:
 | `passive` | bool | Optional | A bool that, if false, will enable commands to be sent to the elevator. Default is false. |
 | `exception_timeout` | bool | Optional | The time that a command will be held for while waiting for a possible exception to a given command. Default is 0.5 second.  |
 
-
+# Example Do_Command
+```json
+{
+  "sendCarCall": {
+    "groupId": 1,
+    "machineId": 123,
+    "floor": 5,
+    "side": "FRONT",
+    "deck": "TOP",
+    "type": "STANDARD"
+  }
+}
+```
 # Test Example
 
 An example of using this module to test out the codebase can be found in the `tests` folder.
